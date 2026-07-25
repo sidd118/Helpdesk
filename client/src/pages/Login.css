@@ -41,6 +41,10 @@
   outline-offset: 1px;
 }
 
+.login-field input[aria-invalid='true'] {
+  border-color: #e5484d;
+}
+
 .login-error {
   color: #e5484d;
   font-size: 14px;

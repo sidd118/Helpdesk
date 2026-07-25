@@ -1,27 +1,36 @@
-import { useState, type FormEvent } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { Navigate, useNavigate } from 'react-router-dom'
+import { z } from 'zod'
 import { authClient } from '../lib/auth-client'
 import './Login.css'
+
+const loginSchema = z.object({
+  email: z.string().min(1, 'Email is required').email('Enter a valid email'),
+  password: z.string().min(1, 'Password is required'),
+})
+
+type LoginFormValues = z.infer<typeof loginSchema>
 
 export default function Login() {
   const navigate = useNavigate()
   const { data: session, isPending } = authClient.useSession()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setSubmitting(true)
-    setError(null)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>({ resolver: zodResolver(loginSchema) })
+
+  const onSubmit = async ({ email, password }: LoginFormValues) => {
+    setAuthError(null)
 
     const { error } = await authClient.signIn.email({ email, password })
 
-    setSubmitting(false)
-
     if (error) {
-      setError(error.message ?? 'Invalid email or password')
+      setAuthError(error.message ?? 'Invalid email or password')
       return
     }
 
@@ -39,17 +48,23 @@ export default function Login() {
   return (
     <div className="login-page">
       <h1>Log in</h1>
-      <form className="login-form" onSubmit={handleSubmit}>
+      <form
+        className="login-form"
+        onSubmit={handleSubmit(onSubmit)}
+        noValidate
+      >
         <div className="login-field">
           <label htmlFor="email">Email</label>
           <input
             id="email"
             type="email"
             autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            aria-invalid={errors.email ? 'true' : 'false'}
+            {...register('email')}
           />
+          {errors.email && (
+            <p className="login-error">{errors.email.message}</p>
+          )}
         </div>
         <div className="login-field">
           <label htmlFor="password">Password</label>
@@ -57,14 +72,16 @@ export default function Login() {
             id="password"
             type="password"
             autoComplete="current-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            aria-invalid={errors.password ? 'true' : 'false'}
+            {...register('password')}
           />
+          {errors.password && (
+            <p className="login-error">{errors.password.message}</p>
+          )}
         </div>
-        {error && <p className="login-error">{error}</p>}
-        <button type="submit" className="login-submit" disabled={submitting}>
-          {submitting ? 'Logging in...' : 'Log in'}
+        {authError && <p className="login-error">{authError}</p>}
+        <button type="submit" className="login-submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Logging in...' : 'Log in'}
         </button>
       </form>
     </div>
