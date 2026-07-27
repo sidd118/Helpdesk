@@ -5,7 +5,11 @@ export default function RequireAuth() {
   const { data: session, isPending } = authClient.useSession();
 
   if (isPending) {
-    return <p>Loading...</p>
+    return (
+      <div className="flex min-h-svh items-center justify-center bg-white text-slate-600 dark:bg-slate-950 dark:text-slate-400">
+        <p>Loading...</p>
+      </div>
+    )
   }
 
   if (!session) {

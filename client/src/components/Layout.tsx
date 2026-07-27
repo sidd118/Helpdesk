@@ -10,9 +10,11 @@ export default function Layout() {
   const { data: session } = authClient.useSession()
 
   return (
-    <>
+    <div className="flex min-h-svh flex-col bg-white text-slate-600 dark:bg-slate-950 dark:text-slate-400">
       <Navbar session={session} />
-      <Outlet context={{ session } satisfies LayoutContext} />
-    </>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">
+        <Outlet context={{ session } satisfies LayoutContext} />
+      </main>
+    </div>
   )
 }
