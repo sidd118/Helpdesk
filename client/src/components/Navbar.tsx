@@ -1,6 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { authClient } from '../lib/auth-client'
+import { Button } from '@/components/ui/button'
+import { authClient } from '@/lib/auth-client'
 import type { LayoutContext } from './Layout'
+import ThemeToggle from './ThemeToggle'
 
 type NavbarProps = {
   session: LayoutContext['session']
@@ -15,27 +17,30 @@ export default function Navbar({ session }: NavbarProps) {
   }
 
   return (
-    <nav className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-800">
-      <Link
-        to="/"
-        className="font-medium text-slate-900 dark:text-slate-100"
-      >
-        Helpdesk
-      </Link>
-      {session && (
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-900 dark:text-slate-100">
-            {session.user.name}
-          </span>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="cursor-pointer rounded-md border border-slate-200 px-3 py-1.5 text-sm transition-colors hover:border-violet-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 dark:border-slate-800 dark:hover:border-violet-500"
-          >
-            Sign out
-          </button>
-        </div>
-      )}
+    <nav className="border-border flex items-center justify-between border-b px-6 py-4">
+      <div className="flex items-center gap-1">
+        <Link to="/" className="mr-3 font-medium">
+          Helpdesk
+        </Link>
+        {session?.user.role === 'ADMIN' && (
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/users">Users</Link>
+          </Button>
+        )}
+      </div>
+      <div className="flex items-center gap-3">
+        <ThemeToggle />
+        {session && (
+          <>
+            <span className="text-muted-foreground text-sm">
+              {session.user.name}
+            </span>
+            <Button variant="outline" size="sm" onClick={handleSignOut}>
+              Sign out
+            </Button>
+          </>
+        )}
+      </div>
     </nav>
   )
 }

@@ -1,9 +1,23 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { AlertCircleIcon, EyeIcon, EyeOffIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
-import { authClient } from '../lib/auth-client'
+import LoginPanel from '@/components/LoginPanel'
+import ThemeToggle from '@/components/ThemeToggle'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/components/ui/input-group'
+import { Spinner } from '@/components/ui/spinner'
+import { authClient } from '@/lib/auth-client'
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Enter a valid email'),
@@ -12,13 +26,11 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>
 
-const inputClass =
-  'rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-900 transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-violet-500 aria-invalid:border-red-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100'
-
 export default function Login() {
   const navigate = useNavigate()
   const { data: session, isPending } = authClient.useSession()
   const [authError, setAuthError] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
 
   const {
     register,
@@ -41,8 +53,8 @@ export default function Login() {
 
   if (isPending) {
     return (
-      <div className="flex min-h-svh items-center justify-center bg-white text-slate-600 dark:bg-slate-950 dark:text-slate-400">
-        <p>Loading...</p>
+      <div className="bg-background text-muted-foreground flex min-h-svh items-center justify-center">
+        <Spinner className="size-5" />
       </div>
     )
   }
@@ -52,62 +64,78 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-white px-6 py-12 text-slate-600 dark:bg-slate-950 dark:text-slate-400">
-      <h1 className="mb-8 text-3xl font-medium tracking-tight text-slate-900 dark:text-slate-100">
-        Log in
-      </h1>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        noValidate
-        className="flex w-full max-w-xs flex-col gap-4"
-      >
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="email"
-            className="text-sm text-slate-900 dark:text-slate-100"
-          >
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            autoComplete="email"
-            aria-invalid={errors.email ? 'true' : 'false'}
-            className={inputClass}
-            {...register('email')}
-          />
-          {errors.email && (
-            <p className="text-sm text-red-500">{errors.email.message}</p>
-          )}
+    <div className="bg-background text-foreground grid min-h-svh lg:grid-cols-[1.1fr_1fr]">
+      <LoginPanel />
+
+      <main className="relative flex items-center justify-center px-6 py-12">
+        <ThemeToggle className="absolute top-6 right-6" />
+
+        <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 w-full max-w-sm motion-safe:duration-500">
+          <p className="mb-10 font-mono text-xs tracking-[0.22em] uppercase lg:hidden">
+            Helpdesk
+          </p>
+
+          <h1 className="text-2xl font-medium tracking-tight">Sign in</h1>
+          <p className="text-muted-foreground mt-2 text-sm">
+            Use the account your admin set up for you.
+          </p>
+
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-8">
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@company.com"
+                  aria-invalid={!!errors.email}
+                  {...register('email')}
+                />
+                <FieldError errors={[errors.email]} />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <InputGroup>
+                  <InputGroupInput
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    aria-invalid={!!errors.password}
+                    {...register('password')}
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton
+                      size="icon-xs"
+                      onClick={() => setShowPassword((shown) => !shown)}
+                      aria-label={
+                        showPassword ? 'Hide password' : 'Show password'
+                      }
+                    >
+                      {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+                <FieldError errors={[errors.password]} />
+              </Field>
+
+              {authError && (
+                <Alert variant="destructive">
+                  <AlertCircleIcon />
+                  <AlertTitle>Sign in failed</AlertTitle>
+                  <AlertDescription>{authError}</AlertDescription>
+                </Alert>
+              )}
+
+              <Button type="submit" disabled={isSubmitting} className="w-full">
+                {isSubmitting && <Spinner />}
+                {isSubmitting ? 'Signing in...' : 'Sign in'}
+              </Button>
+            </FieldGroup>
+          </form>
         </div>
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="password"
-            className="text-sm text-slate-900 dark:text-slate-100"
-          >
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            aria-invalid={errors.password ? 'true' : 'false'}
-            className={inputClass}
-            {...register('password')}
-          />
-          {errors.password && (
-            <p className="text-sm text-red-500">{errors.password.message}</p>
-          )}
-        </div>
-        {authError && <p className="text-sm text-red-500">{authError}</p>}
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="cursor-pointer rounded-md border border-violet-500/50 bg-violet-500/10 px-3 py-2 text-slate-900 transition-colors hover:border-violet-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 disabled:cursor-default disabled:opacity-60 disabled:hover:border-violet-500/50 dark:text-slate-100"
-        >
-          {isSubmitting ? 'Logging in...' : 'Log in'}
-        </button>
-      </form>
+      </main>
     </div>
   )
 }

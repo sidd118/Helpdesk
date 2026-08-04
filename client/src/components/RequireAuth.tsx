@@ -1,12 +1,12 @@
-import { Navigate, Outlet } from 'react-router-dom';
-import { authClient } from '../lib/auth-client';
+import { Navigate, Outlet } from 'react-router-dom'
+import { authClient } from '@/lib/auth-client'
 
 export default function RequireAuth() {
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession()
 
   if (isPending) {
     return (
-      <div className="flex min-h-svh items-center justify-center bg-white text-slate-600 dark:bg-slate-950 dark:text-slate-400">
+      <div className="bg-background text-muted-foreground flex min-h-svh items-center justify-center">
         <p>Loading...</p>
       </div>
     )
